@@ -2,24 +2,28 @@
 <html lang="sv">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Tetris</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
+
 body {
   background: #1a1a2e;
   color: #eee;
   font-family: 'Courier New', monospace;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   min-height: 100vh;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
+  touch-action: none;
 }
+
+/* ── DESKTOP layout (side panels) ───────────────── */
 #game-wrapper {
   display: flex;
+  flex-direction: row;
   gap: 14px;
   align-items: flex-start;
   padding: 16px 16px 4px;
@@ -30,6 +34,61 @@ body {
   flex-direction: column;
   gap: 10px;
 }
+
+/* ── MOBILE layout (strips above/below board) ────── */
+@media (max-width: 649px) {
+  body { justify-content: flex-start; overflow-y: auto; }
+
+  #game-wrapper {
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 4px 4px;
+    width: 100%;
+  }
+
+  /* Left panel → top strip */
+  #left-panel {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  #left-panel .panel-box {
+    flex: 1;
+    min-width: 60px;
+    padding: 5px 7px;
+  }
+  #left-panel .panel-value { font-size: 15px; }
+  #left-panel .panel-box h3 { font-size: 9px; margin-bottom: 3px; }
+  #speed-bar { margin-top: 3px; }
+  .speed-dot { width: 11px; height: 7px; }
+
+  /* Right panel → bottom strip */
+  #right-panel {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  #right-panel .panel-box {
+    flex: 1;
+    min-width: 70px;
+    padding: 5px 7px;
+  }
+  #right-panel .panel-box h3 { font-size: 9px; margin-bottom: 3px; }
+
+  /* Track selector: 2 columns */
+  #track-list { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; margin-top: 4px; }
+  .track-btn { font-size: 9px; padding: 4px 5px; }
+
+  .btn { font-size: 10px; padding: 5px 6px; }
+
+  /* Next canvas: smaller on mobile */
+  #next-canvas { width: 70px !important; height: 52px !important; }
+}
+
+/* ── SHARED styles ───────────────────────────────── */
 .panel-box {
   background: #16213e;
   border: 2px solid #0f3460;
@@ -54,7 +113,7 @@ body {
   display: block;
   background: #0a0a18;
   cursor: pointer;
-  touch-action: none;
+  flex-shrink: 0;
 }
 #next-canvas {
   display: block;
@@ -84,7 +143,6 @@ body {
 .btn.quit:hover { background: #8a2020; }
 .btn.play { background: #e94560; color: #fff; font-size: 15px; padding: 10px; }
 .btn.play:hover { background: #ff6080; }
-/* Track selector */
 .track-btn {
   background: #0f2040;
   color: #99b;
@@ -111,26 +169,20 @@ body {
 .track-btn .loading-dot { display: none; width: 6px; height: 6px; border-radius: 50%; background: #ffa; animation: pulse 0.8s infinite; flex-shrink: 0; }
 .track-btn.loading .loading-dot { display: block; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-.lives-row {
-  display: flex;
-  gap: 6px;
-  font-size: 22px;
-}
-.life { color: #e94560; transition: color 0.3s; }
+.lives-row { display: flex; gap: 6px; font-size: 22px; }
+.life { color: #e94560; }
 .life.lost { color: #333; }
 #speed-bar { display: flex; gap: 3px; margin-top: 5px; }
 .speed-dot { width: 14px; height: 8px; border-radius: 2px; background: #1a2a1a; transition: background 0.3s; }
 .speed-dot.active { background: #00e676; }
-/* Attribution footer */
 #attribution {
-  font-size: 9px;
-  color: #334;
-  padding: 2px 0 6px;
-  text-align: center;
-  max-width: 620px;
+  font-size: 9px; color: #334;
+  padding: 2px 0 6px; text-align: center; max-width: 620px;
 }
 #attribution a { color: #446; text-decoration: none; }
-/* Overlays */
+#dev-credit { font-size: 11px; color: #445; padding-bottom: 10px; text-align: center; }
+
+/* ── OVERLAYS ────────────────────────────────────── */
 .overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.88);
@@ -138,12 +190,9 @@ body {
   z-index: 200;
 }
 .overlay-box {
-  background: #16213e;
-  border: 3px solid #e94560;
-  border-radius: 16px;
-  padding: 30px 36px;
-  text-align: center;
-  max-width: 380px; width: 90%;
+  background: #16213e; border: 3px solid #e94560;
+  border-radius: 16px; padding: 30px 36px;
+  text-align: center; max-width: 380px; width: 90%;
 }
 .overlay-box h2 { font-size: 32px; color: #e94560; margin-bottom: 14px; letter-spacing: 4px; }
 .overlay-box p { font-size: 13px; color: #aaa; margin: 6px 0; line-height: 1.5; }
@@ -157,9 +206,9 @@ body {
 </style>
 </head>
 <body>
-<div id="game-wrapper">
 
-  <!-- LEFT PANEL -->
+<div id="game-wrapper">
+  <!-- LEFT PANEL (top strip on mobile) -->
   <div id="left-panel">
     <div class="panel-box">
       <h3>Poäng</h3>
@@ -186,9 +235,7 @@ body {
     <div class="panel-box">
       <h3>Liv</h3>
       <div class="lives-row" id="lives-row">
-        <span class="life">♥</span>
-        <span class="life">♥</span>
-        <span class="life">♥</span>
+        <span class="life">♥</span><span class="life">♥</span><span class="life">♥</span>
       </div>
     </div>
   </div>
@@ -196,7 +243,7 @@ body {
   <!-- BOARD -->
   <canvas id="board"></canvas>
 
-  <!-- RIGHT PANEL -->
+  <!-- RIGHT PANEL (bottom strip on mobile) -->
   <div id="right-panel">
     <div class="panel-box">
       <h3>Nästa</h3>
@@ -205,7 +252,7 @@ body {
     <div class="panel-box">
       <h3>Musik</h3>
       <button class="btn on" id="music-btn" onclick="toggleMusic()">♪ Musik PÅ</button>
-      <div id="track-list" style="margin-top:7px;"></div>
+      <div id="track-list" style="margin-top:6px;"></div>
     </div>
     <div class="panel-box">
       <h3>Ljud</h3>
@@ -217,23 +264,22 @@ body {
   </div>
 </div>
 
-<!-- Attribution -->
 <div id="attribution">
   Musik: Kevin MacLeod (<a href="https://incompetech.com" target="_blank">incompetech.com</a>)
   — Licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0</a>
 </div>
-<div style="font-size:11px;color:#445;padding-bottom:10px;">Utvecklat av Algot och Jonas Karlsson 2026</div>
+<div id="dev-credit">Utvecklat av Algot och Jonas Karlsson 2026</div>
 
 <!-- START OVERLAY -->
 <div class="overlay" id="start-overlay">
   <div class="overlay-box">
     <h2>TETRIS</h2>
     <p style="margin-bottom:10px;font-size:14px;color:#ccc;">
-      Klicka/tryck på brickan → rotera<br>
-      Klicka/tryck vänster/höger → flytta<br>
-      Klicka/tryck under brickan → snabba ned
+      Tryck på brickan → rotera<br>
+      Tryck till vänster/höger → flytta<br>
+      Tryck direkt under brickan → snabba ned
     </p>
-    <p class="keys-hint">Tangentbord: ← → ↑ rotera ↓ snabb  Mellanslag = fall</p>
+    <p class="keys-hint">Tangentbord: ← → ↑ rotera  ↓ snabb  Mellanslag = fall</p>
     <button class="btn play" style="margin-top:18px;" onclick="startGame()">SPELA!</button>
   </div>
 </div>
@@ -262,9 +308,19 @@ body {
 
 <script>
 // ─────────────────────────────────────────────
-// CONSTANTS
+// CELL SIZE — dynamic, fits the screen
+// Desktop: 30px  Mobile: fills width, capped by height
 // ─────────────────────────────────────────────
-const COLS = 10, ROWS = 20, CELL = 30;
+const COLS = 10, ROWS = 20;
+
+function calcCell() {
+  if (window.innerWidth >= 650) return 30;
+  const byWidth  = Math.floor((window.innerWidth - 8) / COLS);
+  const byHeight = Math.floor((window.innerHeight * 0.62) / ROWS);
+  return Math.max(20, Math.min(byWidth, byHeight));
+}
+const CELL = calcCell();
+
 const SPEED_MS    = [850, 620, 430, 270, 150];
 const SCORE_TABLE = [0, 100, 300, 500, 800];
 
@@ -280,24 +336,23 @@ const PIECES = [
 
 // ─────────────────────────────────────────────
 // MUSIC TRACKS  (Kevin MacLeod – CC BY 4.0)
-// Selected track saved per browser in localStorage → each user keeps their own preference
 // ─────────────────────────────────────────────
 const BASE = 'https://incompetech.com/music/royalty-free/mp3-royaltyfree/';
 const TRACKS = [
-  { label: '🌙 Late Night Radio',    file: 'Late Night Radio.mp3'    },  // calm lo-fi, electric piano
-  { label: '🌊 Ebbs and Flows',      file: 'Ebbs and Flows.mp3'      },  // dreamy ambient
-  { label: '✨ Equatorial Complex',  file: 'Equatorial Complex.mp3'  },  // synthwave / mystical
-  { label: '🌿 Almost Bliss',        file: 'Almost Bliss.mp3'        },  // soft & relaxing
-  { label: '🌫️ Ether Vox',          file: 'Ether Vox.mp3'           },  // ethereal pads
+  { label: '🌙 Late Night Radio',   file: 'Late Night Radio.mp3'   },
+  { label: '🌊 Ebbs and Flows',     file: 'Ebbs and Flows.mp3'     },
+  { label: '✨ Equatorial Complex', file: 'Equatorial Complex.mp3' },
+  { label: '🌿 Almost Bliss',       file: 'Almost Bliss.mp3'       },
+  { label: '🌫️ Ether Vox',         file: 'Ether Vox.mp3'          },
 ];
 
-// Restore saved track (per-browser localStorage – different for each user)
+// Each browser/user keeps their own saved track via localStorage
 let curTrackIdx = parseInt(localStorage.getItem('tetris_track') ?? '0');
 if (curTrackIdx < 0 || curTrackIdx >= TRACKS.length) curTrackIdx = 0;
 
-let musicAudio  = null;   // current HTMLAudioElement
-let musicOn     = true;
-let sfxOn       = true;
+let musicAudio = null;
+let musicOn    = true;
+let sfxOn      = true;
 
 function startMusic() {
   stopMusic();
@@ -306,37 +361,29 @@ function startMusic() {
   musicAudio = new Audio(url);
   musicAudio.loop   = true;
   musicAudio.volume = 0.32;
-  // Mark button as loading until canplay fires
   setTrackLoading(curTrackIdx, true);
   musicAudio.addEventListener('canplay', () => setTrackLoading(curTrackIdx, false), { once: true });
-  musicAudio.play().catch(() => {});  // autoplay may be blocked; user gesture (click SPELA) unlocks it
+  musicAudio.play().catch(() => {});
 }
 
 function stopMusic() {
-  if (musicAudio) {
-    musicAudio.pause();
-    musicAudio.src = '';
-    musicAudio = null;
-  }
+  if (musicAudio) { musicAudio.pause(); musicAudio.src = ''; musicAudio = null; }
   setTrackLoading(curTrackIdx, false);
 }
 
 function selectTrack(idx) {
   curTrackIdx = idx;
-  localStorage.setItem('tetris_track', idx);           // save per browser
+  localStorage.setItem('tetris_track', idx);
   highlightTrack(idx);
   if (musicOn && gameRunning) startMusic();
 }
 
 function highlightTrack(idx) {
-  document.querySelectorAll('.track-btn').forEach((b, i) => {
-    b.classList.toggle('active', i === idx);
-  });
+  document.querySelectorAll('.track-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
 }
-
-function setTrackLoading(idx, loading) {
-  const btn = document.querySelector('.track-btn[data-idx="' + idx + '"]');
-  if (btn) btn.classList.toggle('loading', loading);
+function setTrackLoading(idx, on) {
+  const b = document.querySelector('.track-btn[data-idx="' + idx + '"]');
+  if (b) b.classList.toggle('loading', on);
 }
 
 function buildTrackUI() {
@@ -362,38 +409,31 @@ function toggleMusic() {
 }
 
 // ─────────────────────────────────────────────
-// SFX  (Web Audio API – generated, no downloads)
+// SFX  (Web Audio API)
 // ─────────────────────────────────────────────
 let audioCtx = null;
-
 function getACtx() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === 'suspended') audioCtx.resume();
   return audioCtx;
 }
-
 function tone(freq, dur, type, vol, when) {
   if (!freq) return;
-  const ctx = getACtx();
-  const t = when != null ? when : ctx.currentTime;
-  const osc = ctx.createOscillator();
-  const g   = ctx.createGain();
+  const ctx = getACtx(), t = when ?? ctx.currentTime;
+  const osc = ctx.createOscillator(), g = ctx.createGain();
   osc.connect(g); g.connect(ctx.destination);
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, t);
+  osc.type = type; osc.frequency.setValueAtTime(freq, t);
   g.gain.setValueAtTime(0.001, t);
   g.gain.linearRampToValueAtTime(vol, t + Math.min(0.03, dur * 0.1));
   g.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.95);
   osc.start(t); osc.stop(t + dur + 0.02);
 }
-
-function sfxMove()   { if(sfxOn) tone(200, .055, 'square', .18); }
-function sfxRotate() { if(!sfxOn) return; const t=getACtx().currentTime; tone(500,.04,'square',.22,t); tone(750,.04,'square',.22,t+.04); }
-function sfxLand()   { if(sfxOn) tone(110, .07, 'sawtooth', .22); }
-function sfxDrop()   { if(!sfxOn) return; const t=getACtx().currentTime; tone(130,.07,'sawtooth',.35,t); tone(80,.12,'sawtooth',.35,t+.06); }
-function sfxLine(n)  { if(!sfxOn) return; const t=getACtx().currentTime; [392,523,659,784].slice(0,n).forEach((f,i)=>tone(f,.13,'sawtooth',.28,t+i*.09)); }
-function sfxDeath()  { if(!sfxOn) return; const t=getACtx().currentTime; [523,415,330,262,196].forEach((f,i)=>tone(f,.3,'sawtooth',.3,t+i*.2)); }
-
+function sfxMove()   { if(sfxOn) tone(200,.055,'square',.18); }
+function sfxRotate() { if(!sfxOn)return; const t=getACtx().currentTime; tone(500,.04,'square',.22,t); tone(750,.04,'square',.22,t+.04); }
+function sfxLand()   { if(sfxOn) tone(110,.07,'sawtooth',.22); }
+function sfxDrop()   { if(!sfxOn)return; const t=getACtx().currentTime; tone(130,.07,'sawtooth',.35,t); tone(80,.12,'sawtooth',.35,t+.06); }
+function sfxLine(n)  { if(!sfxOn)return; const t=getACtx().currentTime; [392,523,659,784].slice(0,n).forEach((f,i)=>tone(f,.13,'sawtooth',.28,t+i*.09)); }
+function sfxDeath()  { if(!sfxOn)return; const t=getACtx().currentTime; [523,415,330,262,196].forEach((f,i)=>tone(f,.3,'sawtooth',.3,t+i*.2)); }
 function toggleSFX() {
   sfxOn = !sfxOn;
   const btn = document.getElementById('sfx-btn');
@@ -402,16 +442,8 @@ function toggleSFX() {
 }
 
 // ─────────────────────────────────────────────
-// GAME STATE
+// CANVAS SETUP
 // ─────────────────────────────────────────────
-let board, cur, nxt, score, hiScore, lives;
-let gameRunning  = false;
-let dropTimer    = null;
-let timerInterval = null;
-let gameStartMs  = 0, speedLevel = 0, speedCycleMin = 0;
-
-hiScore = parseInt(localStorage.getItem('th') || '0');
-
 const canvas  = document.getElementById('board');
 const ctx2    = canvas.getContext('2d');
 canvas.width  = COLS * CELL;
@@ -422,151 +454,139 @@ const nxtCtx    = nxtCanvas.getContext('2d');
 nxtCanvas.width  = 5 * CELL;
 nxtCanvas.height = 4 * CELL;
 
+// ─────────────────────────────────────────────
+// GAME STATE
+// ─────────────────────────────────────────────
+let board, cur, nxt, score, hiScore, lives;
+let gameRunning = false;
+let dropTimer = null, timerInterval = null;
+let gameStartMs = 0, speedLevel = 0, speedCycleMin = 0;
+
+hiScore = parseInt(localStorage.getItem('th') || '0');
+
 function mkBoard() { return Array.from({length:ROWS}, () => Array(COLS).fill(0)); }
 
 function randomPiece() {
   const p = PIECES[Math.floor(Math.random() * PIECES.length)];
-  return { shape: p.shape.map(r => [...r]), color: p.color,
+  return { shape: p.shape.map(r=>[...r]), color: p.color,
            x: Math.floor((COLS - p.shape[0].length) / 2), y: 0 };
 }
 
 function rotate(shape) {
-  const R = shape.length, C = shape[0].length;
-  const out = Array.from({length:C}, () => Array(R).fill(0));
-  for (let r=0; r<R; r++) for (let c=0; c<C; c++) out[c][R-1-r] = shape[r][c];
+  const R=shape.length, C=shape[0].length;
+  const out=Array.from({length:C},()=>Array(R).fill(0));
+  for(let r=0;r<R;r++) for(let c=0;c<C;c++) out[c][R-1-r]=shape[r][c];
   return out;
 }
 
 function valid(shape, x, y) {
-  for (let r=0; r<shape.length; r++)
-    for (let c=0; c<shape[r].length; c++) {
-      if (!shape[r][c]) continue;
+  for(let r=0;r<shape.length;r++)
+    for(let c=0;c<shape[r].length;c++){
+      if(!shape[r][c]) continue;
       const nx=x+c, ny=y+r;
-      if (nx<0||nx>=COLS||ny>=ROWS) return false;
-      if (ny>=0 && board[ny][nx]) return false;
+      if(nx<0||nx>=COLS||ny>=ROWS) return false;
+      if(ny>=0&&board[ny][nx]) return false;
     }
   return true;
 }
 
 function pieceBounds(piece) {
-  let minC=99, maxC=-1, minR=99, maxR=-1;
-  for (let r=0; r<piece.shape.length; r++)
-    for (let c=0; c<piece.shape[r].length; c++)
-      if (piece.shape[r][c]) {
-        minC=Math.min(minC,c); maxC=Math.max(maxC,c);
-        minR=Math.min(minR,r); maxR=Math.max(maxR,r);
-      }
+  let minC=99,maxC=-1,minR=99,maxR=-1;
+  for(let r=0;r<piece.shape.length;r++)
+    for(let c=0;c<piece.shape[r].length;c++)
+      if(piece.shape[r][c]){minC=Math.min(minC,c);maxC=Math.max(maxC,c);minR=Math.min(minR,r);maxR=Math.max(maxR,r);}
   return { l:(piece.x+minC)*CELL, r:(piece.x+maxC+1)*CELL,
            t:(piece.y+minR)*CELL, b:(piece.y+maxR+1)*CELL };
 }
 
-function ghostY() {
-  let gy = cur.y;
-  while (valid(cur.shape, cur.x, gy+1)) gy++;
-  return gy;
-}
+function ghostY() { let gy=cur.y; while(valid(cur.shape,cur.x,gy+1)) gy++; return gy; }
 
 // ─────────────────────────────────────────────
 // DRAWING
 // ─────────────────────────────────────────────
 function drawCell(c2d, x, y, color, sz) {
-  sz = sz || CELL;
-  c2d.fillStyle = color;
-  c2d.fillRect(x*sz+1, y*sz+1, sz-2, sz-2);
-  c2d.fillStyle = 'rgba(255,255,255,0.22)';
-  c2d.fillRect(x*sz+1, y*sz+1, sz-2, 4);
-  c2d.fillRect(x*sz+1, y*sz+1, 4, sz-2);
-  c2d.fillStyle = 'rgba(0,0,0,0.28)';
-  c2d.fillRect(x*sz+1, y*sz+sz-5, sz-2, 4);
-  c2d.fillRect(x*sz+sz-5, y*sz+1, 4, sz-2);
+  sz = sz||CELL;
+  c2d.fillStyle=color;
+  c2d.fillRect(x*sz+1,y*sz+1,sz-2,sz-2);
+  c2d.fillStyle='rgba(255,255,255,0.22)';
+  c2d.fillRect(x*sz+1,y*sz+1,sz-2,4);
+  c2d.fillRect(x*sz+1,y*sz+1,4,sz-2);
+  c2d.fillStyle='rgba(0,0,0,0.28)';
+  c2d.fillRect(x*sz+1,y*sz+sz-5,sz-2,4);
+  c2d.fillRect(x*sz+sz-5,y*sz+1,4,sz-2);
 }
 
 function draw() {
-  ctx2.clearRect(0, 0, canvas.width, canvas.height);
-  ctx2.strokeStyle = 'rgba(255,255,255,0.035)';
-  ctx2.lineWidth = 1;
-  for (let r=0; r<ROWS; r++) for (let c=0; c<COLS; c++) ctx2.strokeRect(c*CELL, r*CELL, CELL, CELL);
-  for (let r=0; r<ROWS; r++) for (let c=0; c<COLS; c++) if (board[r][c]) drawCell(ctx2, c, r, board[r][c]);
-  if (!cur || !gameRunning) return;
-  const gy = ghostY();
-  if (gy !== cur.y) {
-    ctx2.globalAlpha = 0.22;
-    cur.shape.forEach((row,r) => row.forEach((v,c) => { if(v) drawCell(ctx2, cur.x+c, gy+r, cur.color); }));
-    ctx2.globalAlpha = 1;
+  ctx2.clearRect(0,0,canvas.width,canvas.height);
+  ctx2.strokeStyle='rgba(255,255,255,0.035)'; ctx2.lineWidth=1;
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) ctx2.strokeRect(c*CELL,r*CELL,CELL,CELL);
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) if(board[r][c]) drawCell(ctx2,c,r,board[r][c]);
+  if(!cur||!gameRunning) return;
+  const gy=ghostY();
+  if(gy!==cur.y){
+    ctx2.globalAlpha=.22;
+    cur.shape.forEach((row,r)=>row.forEach((v,c)=>{if(v) drawCell(ctx2,cur.x+c,gy+r,cur.color);}));
+    ctx2.globalAlpha=1;
   }
-  cur.shape.forEach((row,r) => row.forEach((v,c) => { if(v) drawCell(ctx2, cur.x+c, cur.y+r, cur.color); }));
+  cur.shape.forEach((row,r)=>row.forEach((v,c)=>{if(v) drawCell(ctx2,cur.x+c,cur.y+r,cur.color);}));
 }
 
 function drawNext() {
-  nxtCtx.clearRect(0, 0, nxtCanvas.width, nxtCanvas.height);
-  if (!nxt) return;
-  const ox = Math.floor((5 - nxt.shape[0].length) / 2);
-  const oy = Math.floor((4 - nxt.shape.length) / 2);
-  nxt.shape.forEach((row,r) => row.forEach((v,c) => { if(v) drawCell(nxtCtx, ox+c, oy+r, nxt.color, CELL); }));
+  nxtCtx.clearRect(0,0,nxtCanvas.width,nxtCanvas.height);
+  if(!nxt) return;
+  const ox=Math.floor((5-nxt.shape[0].length)/2), oy=Math.floor((4-nxt.shape.length)/2);
+  nxt.shape.forEach((row,r)=>row.forEach((v,c)=>{if(v) drawCell(nxtCtx,ox+c,oy+r,nxt.color,CELL);}));
 }
 
 function updateUI() {
-  document.getElementById('score-val').textContent  = score.toLocaleString('sv');
+  document.getElementById('score-val').textContent   = score.toLocaleString('sv');
   document.getElementById('hiscore-val').textContent = hiScore.toLocaleString('sv');
-  const lr = document.getElementById('lives-row');
-  lr.innerHTML = '';
-  for (let i=0; i<3; i++) {
-    const s = document.createElement('span');
-    s.className = 'life' + (i >= lives ? ' lost' : '');
-    s.textContent = '♥';
-    lr.appendChild(s);
-  }
-  for (let i=0; i<5; i++)
-    document.getElementById('sd'+i).className = 'speed-dot' + (i <= speedLevel ? ' active' : '');
+  const lr=document.getElementById('lives-row'); lr.innerHTML='';
+  for(let i=0;i<3;i++){const s=document.createElement('span');s.className='life'+(i>=lives?' lost':'');s.textContent='♥';lr.appendChild(s);}
+  for(let i=0;i<5;i++) document.getElementById('sd'+i).className='speed-dot'+(i<=speedLevel?' active':'');
 }
 
 // ─────────────────────────────────────────────
 // GAME LOOP
 // ─────────────────────────────────────────────
-function schedDrop() {
-  if (dropTimer) clearTimeout(dropTimer);
-  dropTimer = setTimeout(step, SPEED_MS[speedLevel]);
-}
+function schedDrop() { if(dropTimer) clearTimeout(dropTimer); dropTimer=setTimeout(step,SPEED_MS[speedLevel]); }
 
 function step() {
-  if (!gameRunning) return;
-  if (valid(cur.shape, cur.x, cur.y+1)) { cur.y++; draw(); schedDrop(); }
+  if(!gameRunning) return;
+  if(valid(cur.shape,cur.x,cur.y+1)){cur.y++;draw();schedDrop();}
   else lock();
 }
 
 function lock() {
   sfxLand();
-  cur.shape.forEach((row,r) => row.forEach((v,c) => {
-    if (!v) return;
-    const ny = cur.y+r, nx = cur.x+c;
-    if (ny >= 0) board[ny][nx] = cur.color;
+  cur.shape.forEach((row,r)=>row.forEach((v,c)=>{
+    if(!v)return; const ny=cur.y+r,nx=cur.x+c; if(ny>=0) board[ny][nx]=cur.color;
   }));
-  const cleared = [];
-  for (let r=ROWS-1; r>=0; r--) if (board[r].every(c => c !== 0)) cleared.push(r);
-  if (cleared.length) {
+  const cleared=[];
+  for(let r=ROWS-1;r>=0;r--) if(board[r].every(c=>c!==0)) cleared.push(r);
+  if(cleared.length){
     sfxLine(cleared.length);
-    cleared.forEach(r => { board.splice(r,1); board.unshift(Array(COLS).fill(0)); });
-    score += SCORE_TABLE[cleared.length] * (speedLevel + 1);
-    if (score > hiScore) { hiScore = score; localStorage.setItem('th', hiScore); }
+    cleared.forEach(r=>{board.splice(r,1);board.unshift(Array(COLS).fill(0));});
+    score+=SCORE_TABLE[cleared.length]*(speedLevel+1);
+    if(score>hiScore){hiScore=score;localStorage.setItem('th',hiScore);}
     updateUI();
   }
-  cur = nxt; nxt = randomPiece();
+  cur=nxt; nxt=randomPiece();
   draw(); drawNext();
-  if (!valid(cur.shape, cur.x, cur.y)) { loseLife(); return; }
+  if(!valid(cur.shape,cur.x,cur.y)){loseLife();return;}
   schedDrop();
 }
 
 function tryRotate() {
-  const r = rotate(cur.shape);
-  for (const kick of [0,-1,1,-2,2])
-    if (valid(r, cur.x+kick, cur.y)) { cur.shape=r; cur.x+=kick; sfxRotate(); draw(); return; }
+  const r=rotate(cur.shape);
+  for(const kick of [0,-1,1,-2,2])
+    if(valid(r,cur.x+kick,cur.y)){cur.shape=r;cur.x+=kick;sfxRotate();draw();return;}
 }
 
 function hardDrop() {
-  const gy = ghostY();
-  if (gy === cur.y) return;
-  cur.y = gy; sfxDrop(); draw();
-  if (dropTimer) clearTimeout(dropTimer);
+  const gy=ghostY(); if(gy===cur.y)return;
+  cur.y=gy; sfxDrop(); draw();
+  if(dropTimer) clearTimeout(dropTimer);
   lock();
 }
 
@@ -574,176 +594,167 @@ function hardDrop() {
 // TIMER & SPEED
 // ─────────────────────────────────────────────
 function startTimer() {
-  if (timerInterval) clearInterval(timerInterval);
-  gameStartMs = Date.now(); speedLevel = 0; speedCycleMin = 0;
-  timerInterval = setInterval(() => {
-    if (!gameRunning) return;
-    const elapsed  = Date.now() - gameStartMs;
-    const totalSec = Math.floor(elapsed / 1000);
-    const m = Math.floor(totalSec / 60), s = totalSec % 60;
-    document.getElementById('timer-val').textContent = `${m}:${s.toString().padStart(2,'0')}`;
-    const cycleMin = m % 5;
-    if (cycleMin !== speedCycleMin) {
-      speedCycleMin = cycleMin; speedLevel = cycleMin;
-      updateUI();
-      if (dropTimer) { clearTimeout(dropTimer); schedDrop(); }
-    }
-  }, 500);
+  if(timerInterval) clearInterval(timerInterval);
+  gameStartMs=Date.now(); speedLevel=0; speedCycleMin=0;
+  timerInterval=setInterval(()=>{
+    if(!gameRunning) return;
+    const elapsed=Date.now()-gameStartMs, totalSec=Math.floor(elapsed/1000);
+    const m=Math.floor(totalSec/60),s=totalSec%60;
+    document.getElementById('timer-val').textContent=`${m}:${s.toString().padStart(2,'0')}`;
+    const cycleMin=m%5;
+    if(cycleMin!==speedCycleMin){speedCycleMin=cycleMin;speedLevel=cycleMin;updateUI();if(dropTimer){clearTimeout(dropTimer);schedDrop();}}
+  },500);
 }
 
 // ─────────────────────────────────────────────
 // LIFE / GAME OVER
 // ─────────────────────────────────────────────
 function loseLife() {
-  lives--;
-  sfxDeath();
-  gameRunning = false;
-  if (dropTimer) clearTimeout(dropTimer);
-  stopMusic();
-  updateUI();
-  setTimeout(() => { lives <= 0 ? showGameOver() : showLifeLost(); }, 700);
+  lives--; sfxDeath(); gameRunning=false;
+  if(dropTimer) clearTimeout(dropTimer);
+  stopMusic(); updateUI();
+  setTimeout(()=>{lives<=0?showGameOver():showLifeLost();},700);
 }
 
 function showLifeLost() {
-  document.getElementById('life-msg').textContent = `${lives} liv kvar!`;
-  const hh = document.getElementById('life-overlay-hearts');
-  hh.innerHTML = '';
-  for (let i=0; i<3; i++) {
-    const s = document.createElement('span');
-    s.className = 'life' + (i >= lives ? ' lost' : '');
-    s.textContent = '♥'; hh.appendChild(s);
-  }
-  document.getElementById('life-overlay').style.display = 'flex';
+  document.getElementById('life-msg').textContent=`${lives} liv kvar!`;
+  const hh=document.getElementById('life-overlay-hearts'); hh.innerHTML='';
+  for(let i=0;i<3;i++){const s=document.createElement('span');s.className='life'+(i>=lives?' lost':'');s.textContent='♥';hh.appendChild(s);}
+  document.getElementById('life-overlay').style.display='flex';
 }
 
-const COMMENTS = [
-  {max:200,   msg:'Hade du ögonen stängda? Imponerande dåligt!'},
-  {max:600,   msg:'Tetris-karriären lär bli kort... men kul att du försökte!'},
-  {max:1200,  msg:'Halvhjärtat försök. Mer kaffe nästa gång!'},
-  {max:2500,  msg:'Inte helt katastrof. Lite träning och du kanske klarar sig!'},
-  {max:6000,  msg:'Hyfsat! Du vet i alla fall åt vilket håll brickorna faller.'},
-  {max:12000, msg:'Bra jobbat! Nu börjar det likna ett riktigt Tetrisspel!'},
-  {max:25000, msg:'Riktigt imponerande! Du har klart talang för det här!'},
-  {max:1e9,   msg:'LEGENDARISK! Är du människa eller supercomputer?!'},
+const COMMENTS=[
+  {max:200,  msg:'Hade du ögonen stängda? Imponerande dåligt!'},
+  {max:600,  msg:'Tetris-karriären lär bli kort... men kul att du försökte!'},
+  {max:1200, msg:'Halvhjärtat försök. Mer kaffe nästa gång!'},
+  {max:2500, msg:'Inte helt katastrof. Lite träning och du kanske klarar sig!'},
+  {max:6000, msg:'Hyfsat! Du vet i alla fall åt vilket håll brickorna faller.'},
+  {max:12000,msg:'Bra jobbat! Nu börjar det likna ett riktigt Tetrisspel!'},
+  {max:25000,msg:'Riktigt imponerande! Du har klart talang för det här!'},
+  {max:1e9,  msg:'LEGENDARISK! Är du människa eller supercomputer?!'},
 ];
 
 function showGameOver() {
-  const c = COMMENTS.find(x => score <= x.max);
-  document.getElementById('final-score').textContent = score.toLocaleString('sv');
-  document.getElementById('go-comment').textContent  = c ? c.msg : '';
-  const hm = document.getElementById('go-hiscore');
-  if (score >= hiScore && score > 0) { hm.textContent = '🏆 Nytt rekord!'; hm.className = 'hiscore-msg new'; }
-  else { hm.textContent = `Rekord: ${hiScore.toLocaleString('sv')}`; hm.className = 'hiscore-msg'; }
-  document.getElementById('gameover-overlay').style.display = 'flex';
+  const c=COMMENTS.find(x=>score<=x.max);
+  document.getElementById('final-score').textContent=score.toLocaleString('sv');
+  document.getElementById('go-comment').textContent=c?c.msg:'';
+  const hm=document.getElementById('go-hiscore');
+  if(score>=hiScore&&score>0){hm.textContent='🏆 Nytt rekord!';hm.className='hiscore-msg new';}
+  else{hm.textContent=`Rekord: ${hiScore.toLocaleString('sv')}`;hm.className='hiscore-msg';}
+  document.getElementById('gameover-overlay').style.display='flex';
 }
 
 // ─────────────────────────────────────────────
 // GAME CONTROL
 // ─────────────────────────────────────────────
 function startGame() {
-  getACtx();  // unlock Web Audio on user gesture
-  document.getElementById('start-overlay').style.display = 'none';
-  initGame();
-  startMusic();
+  getACtx();
+  document.getElementById('start-overlay').style.display='none';
+  initGame(); startMusic();
 }
-
 function initGame() {
-  board = mkBoard(); score = 0; lives = 3;
-  cur = randomPiece(); nxt = randomPiece();
-  gameRunning = true;
-  updateUI(); draw(); drawNext();
-  startTimer(); schedDrop();
+  board=mkBoard(); score=0; lives=3;
+  cur=randomPiece(); nxt=randomPiece();
+  gameRunning=true; updateUI(); draw(); drawNext(); startTimer(); schedDrop();
 }
-
 function continueAfterLife() {
-  document.getElementById('life-overlay').style.display = 'none';
-  board = mkBoard(); cur = randomPiece(); nxt = randomPiece();
-  gameRunning = true; gameStartMs = Date.now(); speedLevel = 0; speedCycleMin = 0;
+  document.getElementById('life-overlay').style.display='none';
+  board=mkBoard(); cur=randomPiece(); nxt=randomPiece();
+  gameRunning=true; gameStartMs=Date.now(); speedLevel=0; speedCycleMin=0;
   updateUI(); draw(); drawNext(); schedDrop();
-  if (musicOn) startMusic();
+  if(musicOn) startMusic();
 }
-
 function restartGame() {
-  document.getElementById('gameover-overlay').style.display = 'none';
-  initGame();
-  if (musicOn) startMusic();
+  document.getElementById('gameover-overlay').style.display='none';
+  initGame(); if(musicOn) startMusic();
 }
-
 function quitGame() {
-  gameRunning = false;
-  if (dropTimer) clearTimeout(dropTimer);
-  if (timerInterval) clearInterval(timerInterval);
+  gameRunning=false;
+  if(dropTimer) clearTimeout(dropTimer);
+  if(timerInterval) clearInterval(timerInterval);
   stopMusic();
-  ['life-overlay','gameover-overlay'].forEach(id => document.getElementById(id).style.display = 'none');
-  document.getElementById('start-overlay').style.display = 'flex';
+  ['life-overlay','gameover-overlay'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('start-overlay').style.display='flex';
 }
 
 // ─────────────────────────────────────────────
 // KEYBOARD
 // ─────────────────────────────────────────────
-document.addEventListener('keydown', e => {
-  if (!gameRunning) return;
-  switch (e.key) {
+document.addEventListener('keydown', e=>{
+  if(!gameRunning) return;
+  switch(e.key){
     case 'ArrowLeft':  case 'a': case 'A':
-      if (valid(cur.shape,cur.x-1,cur.y)) { cur.x--; sfxMove(); draw(); } e.preventDefault(); break;
+      if(valid(cur.shape,cur.x-1,cur.y)){cur.x--;sfxMove();draw();} e.preventDefault(); break;
     case 'ArrowRight': case 'd': case 'D':
-      if (valid(cur.shape,cur.x+1,cur.y)) { cur.x++; sfxMove(); draw(); } e.preventDefault(); break;
+      if(valid(cur.shape,cur.x+1,cur.y)){cur.x++;sfxMove();draw();} e.preventDefault(); break;
     case 'ArrowUp':    case 'w': case 'W':
       tryRotate(); e.preventDefault(); break;
     case 'ArrowDown':  case 's': case 'S':
-      if (valid(cur.shape,cur.x,cur.y+1)) { cur.y++; draw(); schedDrop(); } e.preventDefault(); break;
+      if(valid(cur.shape,cur.x,cur.y+1)){cur.y++;draw();schedDrop();} e.preventDefault(); break;
     case ' ':
       hardDrop(); e.preventDefault(); break;
   }
 });
 
 // ─────────────────────────────────────────────
-// TOUCH / CLICK CONTROLS
-// Rotate  : tap on piece bounding box ± 1 cell margin
-// Hard drop: tap directly below piece (within piece x-range)
-// Move L/R : tap anywhere left/right of piece, regardless of height
+// TOUCH / CLICK — full-page, mapped to canvas coords
+//
+// Zones (in canvas-space, can be negative = outside canvas):
+//   px < piece.left              → move left   (any height on screen)
+//   px > piece.right             → move right  (any height on screen)
+//   on piece ± 1-cell margin     → rotate
+//   below piece, within x-strip  → hard drop
 // ─────────────────────────────────────────────
-const MARG = CELL; // 1-cell safety zone around piece for rotate
+const MARG = CELL; // safety margin around piece for rotate zone
 
-function handleTap(px, py) {
+function toCanvasCoords(clientX, clientY) {
+  const r = canvas.getBoundingClientRect();
+  return {
+    x: (clientX - r.left) * (canvas.width  / r.width),
+    y: (clientY - r.top)  * (canvas.height / r.height),
+  };
+}
+
+function handleTap(clientX, clientY) {
   if (!gameRunning || !cur) return;
+  const { x: px, y: py } = toCanvasCoords(clientX, clientY);
   const b = pieceBounds(cur);
 
   // 1. On / near piece → rotate
   if (px >= b.l - MARG && px <= b.r + MARG &&
       py >= b.t - MARG && py <= b.b + MARG) {
-    tryRotate();
-    return;
+    tryRotate(); return;
   }
 
   // 2. Directly below piece (within piece x-strip) → hard drop
   if (py > b.b && px >= b.l - MARG * 0.4 && px <= b.r + MARG * 0.4) {
-    hardDrop();
-    return;
+    hardDrop(); return;
   }
 
-  // 3. Anywhere to the left of piece → move left (any height)
+  // 3. Anywhere to the LEFT of piece (any height) → move left
   if (px < b.l) {
     if (valid(cur.shape, cur.x - 1, cur.y)) { cur.x--; sfxMove(); draw(); }
     return;
   }
 
-  // 4. Anywhere to the right of piece → move right (any height)
+  // 4. Anywhere to the RIGHT of piece (any height) → move right
   if (px > b.r) {
     if (valid(cur.shape, cur.x + 1, cur.y)) { cur.x++; sfxMove(); draw(); }
     return;
   }
 }
 
-canvas.addEventListener('click', e => {
-  const r = canvas.getBoundingClientRect();
-  handleTap((e.clientX-r.left)*(canvas.width/r.width), (e.clientY-r.top)*(canvas.height/r.height));
+// Listen on the whole document so tapping OUTSIDE the canvas also works
+document.addEventListener('click', e => {
+  if (e.target.closest('button, a, .track-btn')) return; // let UI buttons handle themselves
+  handleTap(e.clientX, e.clientY);
 });
-canvas.addEventListener('touchend', e => {
+
+document.addEventListener('touchend', e => {
+  if (e.target.closest('button, a, .track-btn')) return;
   e.preventDefault();
-  const r = canvas.getBoundingClientRect();
   const t = e.changedTouches[0];
-  handleTap((t.clientX-r.left)*(canvas.width/r.width), (t.clientY-r.top)*(canvas.height/r.height));
+  handleTap(t.clientX, t.clientY);
 }, { passive: false });
 
 // ─────────────────────────────────────────────
@@ -753,17 +764,6 @@ canvas.addEventListener('touchend', e => {
 
 buildTrackUI();
 updateUI(); draw(); drawNext();
-
-// ─────────────────────────────────────────────
-// RESPONSIVE SCALING  (fits any screen width)
-// Natural layout width: 138 + 14 + 300 + 14 + 138 + 32px padding = 636px
-// ─────────────────────────────────────────────
-function rescale() {
-  const z = Math.min(1, window.innerWidth / 636);
-  document.getElementById('game-wrapper').style.zoom = String(z);
-}
-window.addEventListener('resize', rescale);
-rescale();
 </script>
 </body>
 </html>
