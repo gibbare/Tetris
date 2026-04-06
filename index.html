@@ -78,14 +78,33 @@ body {
   }
   #right-panel .panel-box h3 { font-size: 9px; margin-bottom: 3px; }
 
-  /* Track selector: 2 columns */
-  #track-list { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; margin-top: 4px; }
-  .track-btn { font-size: 9px; padding: 4px 5px; }
-
   .btn { font-size: 10px; padding: 5px 6px; }
 
   /* Next canvas: smaller on mobile */
   #next-canvas { width: 70px !important; height: 52px !important; }
+
+  /* Track container: full-width row below the other controls */
+  #track-container {
+    flex-basis: 100%;
+    width: 100%;
+    flex-shrink: 0;
+    flex-grow: 0;
+  }
+  #track-container #track-list {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+    overflow-x: auto;
+    padding-bottom: 3px;
+    margin-top: 4px;
+  }
+  #track-container .track-btn {
+    flex-shrink: 0;
+    width: auto;
+    margin-top: 0;
+    font-size: 9px;
+    padding: 4px 7px;
+  }
 }
 
 /* ── SHARED styles ───────────────────────────────── */
@@ -120,6 +139,7 @@ body {
   background: #0a0a18;
   border-radius: 4px;
   margin-top: 4px;
+  cursor: pointer;
 }
 .btn {
   background: #0f3460;
@@ -245,21 +265,26 @@ body {
 
   <!-- RIGHT PANEL (bottom strip on mobile) -->
   <div id="right-panel">
-    <div class="panel-box">
-      <h3>Nästa</h3>
-      <canvas id="next-canvas"></canvas>
+    <div class="panel-box" id="next-box">
+      <h3>Nästa ↺</h3>
+      <canvas id="next-canvas" title="Tryck för att rotera"></canvas>
     </div>
     <div class="panel-box">
       <h3>Musik</h3>
       <button class="btn on" id="music-btn" onclick="toggleMusic()">♪ Musik PÅ</button>
-      <div id="track-list" style="margin-top:6px;"></div>
     </div>
     <div class="panel-box">
       <h3>Ljud</h3>
       <button class="btn on" id="sfx-btn" onclick="toggleSFX()">♬ Ljud PÅ</button>
     </div>
-    <div class="panel-box">
+    <div class="panel-box" id="quit-box">
+      <h3>&nbsp;</h3>
       <button class="btn quit" onclick="quitGame()">✕ Avsluta</button>
+    </div>
+    <!-- Låtväljare: egen rad, full bredd på mobil -->
+    <div class="panel-box" id="track-container">
+      <h3>Låtar</h3>
+      <div id="track-list"></div>
     </div>
   </div>
 </div>
@@ -744,14 +769,25 @@ function handleTap(clientX, clientY) {
   }
 }
 
+// Tapping the next-piece preview rotates the falling piece
+nxtCanvas.addEventListener('click', e => {
+  e.stopPropagation();
+  if (gameRunning && cur) tryRotate();
+});
+nxtCanvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  if (gameRunning && cur) tryRotate();
+}, { passive: false });
+
 // Listen on the whole document so tapping OUTSIDE the canvas also works
 document.addEventListener('click', e => {
-  if (e.target.closest('button, a, .track-btn')) return; // let UI buttons handle themselves
+  if (e.target.closest('button, a, .track-btn, #next-canvas')) return;
   handleTap(e.clientX, e.clientY);
 });
 
 document.addEventListener('touchend', e => {
-  if (e.target.closest('button, a, .track-btn')) return;
+  if (e.target.closest('button, a, .track-btn, #next-canvas')) return;
   e.preventDefault();
   const t = e.changedTouches[0];
   handleTap(t.clientX, t.clientY);
