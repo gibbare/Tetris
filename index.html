@@ -15,7 +15,8 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 #game-wrapper {
   display: flex;
@@ -698,16 +699,40 @@ document.addEventListener('keydown', e => {
 
 // ─────────────────────────────────────────────
 // TOUCH / CLICK CONTROLS
+// Rotate  : tap on piece bounding box ± 1 cell margin
+// Hard drop: tap directly below piece (within piece x-range)
+// Move L/R : tap anywhere left/right of piece, regardless of height
 // ─────────────────────────────────────────────
-const MARG = 1.5 * CELL;
+const MARG = CELL; // 1-cell safety zone around piece for rotate
 
 function handleTap(px, py) {
   if (!gameRunning || !cur) return;
   const b = pieceBounds(cur);
-  if (py > b.b + MARG) { hardDrop(); return; }
-  if (px>=b.l-MARG && px<=b.r+MARG && py>=b.t-MARG && py<=b.b+MARG) { tryRotate(); return; }
-  if (px < b.l - MARG) { if (valid(cur.shape,cur.x-1,cur.y)) { cur.x--; sfxMove(); draw(); } return; }
-  if (px > b.r + MARG) { if (valid(cur.shape,cur.x+1,cur.y)) { cur.x++; sfxMove(); draw(); } return; }
+
+  // 1. On / near piece → rotate
+  if (px >= b.l - MARG && px <= b.r + MARG &&
+      py >= b.t - MARG && py <= b.b + MARG) {
+    tryRotate();
+    return;
+  }
+
+  // 2. Directly below piece (within piece x-strip) → hard drop
+  if (py > b.b && px >= b.l - MARG * 0.4 && px <= b.r + MARG * 0.4) {
+    hardDrop();
+    return;
+  }
+
+  // 3. Anywhere to the left of piece → move left (any height)
+  if (px < b.l) {
+    if (valid(cur.shape, cur.x - 1, cur.y)) { cur.x--; sfxMove(); draw(); }
+    return;
+  }
+
+  // 4. Anywhere to the right of piece → move right (any height)
+  if (px > b.r) {
+    if (valid(cur.shape, cur.x + 1, cur.y)) { cur.x++; sfxMove(); draw(); }
+    return;
+  }
 }
 
 canvas.addEventListener('click', e => {
@@ -728,6 +753,17 @@ canvas.addEventListener('touchend', e => {
 
 buildTrackUI();
 updateUI(); draw(); drawNext();
+
+// ─────────────────────────────────────────────
+// RESPONSIVE SCALING  (fits any screen width)
+// Natural layout width: 138 + 14 + 300 + 14 + 138 + 32px padding = 636px
+// ─────────────────────────────────────────────
+function rescale() {
+  const z = Math.min(1, window.innerWidth / 636);
+  document.getElementById('game-wrapper').style.zoom = String(z);
+}
+window.addEventListener('resize', rescale);
+rescale();
 </script>
 </body>
 </html>
