@@ -16,8 +16,7 @@ body {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  overflow: hidden;
-  touch-action: none;
+  overflow-x: hidden;
 }
 
 /* ── DESKTOP layout (side panels) ───────────────── */
@@ -133,6 +132,7 @@ body {
   background: #0a0a18;
   cursor: pointer;
   flex-shrink: 0;
+  touch-action: none;
 }
 #next-canvas {
   display: block;
@@ -369,6 +369,11 @@ const TRACKS = [
   { label: '✨ Equatorial Complex', file: 'Equatorial Complex.mp3' },
   { label: '🌿 Almost Bliss',       file: 'Almost Bliss.mp3'       },
   { label: '🌫️ Ether Vox',         file: 'Ether Vox.mp3'          },
+  { label: '🧘 That Zen Moment',    file: 'That Zen Moment.mp3'    },
+  { label: '🌆 Evening',            file: 'Evening.mp3'            },
+  { label: '🌅 Morning',            file: 'Morning.mp3'            },
+  { label: '🎵 Mana Two',           file: 'Mana Two - Part 1.mp3'  },
+  { label: '💫 Sincerely',          file: 'Sincerely.mp3'          },
 ];
 
 // Each browser/user keeps their own saved track via localStorage
@@ -782,12 +787,12 @@ nxtCanvas.addEventListener('touchend', e => {
 
 // Listen on the whole document so tapping OUTSIDE the canvas also works
 document.addEventListener('click', e => {
-  if (e.target.closest('button, a, .track-btn, #next-canvas')) return;
+  if (e.target.closest('button, a, .track-btn, #next-canvas, #left-panel, #right-panel, #attribution, #dev-credit')) return;
   handleTap(e.clientX, e.clientY);
 });
 
 document.addEventListener('touchend', e => {
-  if (e.target.closest('button, a, .track-btn, #next-canvas')) return;
+  if (e.target.closest('button, a, .track-btn, #next-canvas, #left-panel, #right-panel, #attribution, #dev-credit')) return;
   e.preventDefault();
   const t = e.changedTouches[0];
   handleTap(t.clientX, t.clientY);
